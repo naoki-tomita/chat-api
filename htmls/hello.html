@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Chat Room</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    <style type="text/css">
+    <!--
+    #wrap {
+      min-height: 100%;
+      height: auto;
+      /* フッターの高さ分だけ、ネガティブインデントを指定 */
+      margin: 0 auto -160px;
+      /* フッターの高さ分だけ、パディングを指定 */
+      padding: 0 0 160px;
+    }
+
+    /* ここでフッターの高さを指定 */
+    #footer {
+      position: fixed;
+      padding: 15px 0 0;
+      width: 100%;
+      height: 160px;
+      background-color: #f5f5f5;
+      bottom: 0;
+    }
+    -->
+    </style>
+
+  </head>
+  <body>
+    <div id="wrap">
+      <div class="container">
+        <!-- ko foreach: koDatas -->
+        <p data-bind="css: { 'text-right': $parent.koPlacement( name ) }">
+          <span data-bind="text: name"></span>:
+          <span data-bind="text: message"></span>
+        </p>
+        <!-- /ko -->
+      </div>
+    </div>
+    <div id="footer">
+      <div class="container">
+        <form data-bind="submit: koTweet">
+          <div class="form-group">
+            <label class="sr-only" for="name">ユーザー名</label>
+            <input data-bind="value: koName" type="text" class="form-control" placeholder="your name"/>
+          </div>
+          <div class="form-group">
+            <label class="sr-only" for="name">メッセージ</label>
+            <input data-bind="value: koMessage" type="text" class="form-control" placeholder="some message"/>
+          </div>
+          <button type="submit" class="btn btn-primary" data-bind="click: koTweet">tweet</button>
+        </form>
+      </div>
+    </div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.3.0.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script>
+      $( function () {
+        $( '[data-toggle="tooltip"]' ).tooltip()
+      } )
+      var Base = "http://yamano.nsp.ricoh.co.jp/tomita-tools/webapis";
+      var DataClient = {
+        get: function() {
+          return $.ajax( {
+            url: Base,
+            type: "GET",
+            headers: {
+              "Content-Type": "application/json; charset=utf-8"
+            }
+          } );
+        },
+        post: function( name, message ) {
+          return $.ajax( {
+            url: Base,
+            type: "POST",
+            headers: {
+              "Content-Type": "application/json; charset=utf-8"
+            },
+            data: JSON.stringify( {
+              name: name,
+              message: message
+            } )
+          } );
+        }
+      };
+
+      var scrollBottom = function() {
+        window.scrollTo(0,document.body.scrollHeight);
+      };
+
+      ( function() {
+        vm = {
+          koDatas: ko.observable(),
+          koName: ko.observable(),
+          koMessage: ko.observable(),
+          koPlacement: function( name ) {
+            if ( this.koName() === name ) {
+              return true;
+            } else {
+              return false;
+            }
+          },
+          koUpdate: function() {
+            var that = this;
+            DataClient.get()
+            .then( function( result ) {
+              that.koDatas( result );
+              scrollBottom();
+            } )
+          },
+          koTweet: function() {
+            var that = this;
+            DataClient.post( this.koName(), this.koMessage() )
+            .then( function() {
+              that.koMessage( "" );
+              that.koUpdate();
+            } );
+          }
+        }
+        ko.applyBindings( vm );
+        vm.koUpdate();
+      } )( window )
+    </script>
+  </body>
+</html>
